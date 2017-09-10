@@ -1,7 +1,8 @@
-# DISPLAY
+# FILTER
 min_ratio: .1
-min_read: 9
+min_read: 10
 
+# DISPLAY
 display_summary: True
 display_sequence_info: True
 display_nucleotide_dist: True
@@ -10,7 +11,18 @@ display_group_output: True
 display_distance_metric: True
 
 # FUNCTION
-destructive_motif_pull: False
+## one read/isomir matches only one mirna. If multiple matches occur increase motif or set this to TRUE
+## if TRUE, quagmir will find mirna with least edit distance and assign read to that motif/mirna
+destructive_motif_pull: True
+## if seq_end is more then 3 bp longer than consensus_end and contains mismatches 
+## discard as possible sequencing error
+skip_3p_error: True 
+## if seq_end is more then 5 bp long and consensus seq is minimun 22 bp 
+## discard as contaminant
+skip_3p_contaminant: True 
+## post-transcriptional modification on 5p are biologically unlikely 
+## quagmir will check if seq_end contains substitutions compared to consensus_end
+skip_5p_substitution: True 
 
 # INPUT
 motif_consensus_file: 'motif-consensus.fa'
