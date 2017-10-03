@@ -14,10 +14,10 @@ display_distance_metric: True
 ## one read/isomir matches only one mirna. If multiple matches occur increase motif or set this to TRUE
 ## if TRUE, quagmir will find mirna with least edit distance and assign read to that motif/mirna
 destructive_motif_pull: True
-## if seq_end is more then 3 bp longer than consensus_end and contains mismatches 
+## if seq_end is more than 3 bp longer than consensus_end and contains mismatches 
 ## discard as possible sequencing error
 skip_3p_error: True 
-## if seq_end is more then 5 bp long and consensus seq is minimun 22 bp 
+## if seq_end is more than 5 bp longer and consensus seq is minimun 22 bp 
 ## discard as contaminant
 skip_3p_contaminant: True 
 ## post-transcriptional modification on 5p are biologically unlikely 

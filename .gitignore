@@ -6,3 +6,5 @@ data/collapsed
 data/realcase*
 collapsed/
 group_results/
+.ipynb_checkpoints/
+*.ipynb

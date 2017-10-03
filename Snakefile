@@ -592,8 +592,8 @@ rule cpm_normalize_motifs:
         if config['display_expression'] and config['display_sequence_info'] and config['display_summary']:
             df = pd.read_csv(input[0], delimiter="\t", header = 0)
             total_reads = pd.read_csv(input[1], delimiter="\t", header = 0, nrows = 2)['TOTAL_READS_IN_SAMPLE'].iloc[0]
-            df['CPM'] = df['READS'] / df['READS'].sum() * float(10^6) # TPM is also len-norm
-            df['RPKM'] = df['READS'] / df['LEN_READ'] / total_reads * float(10^9)
+            df['CPM'] = df['READS'] / df['READS'].sum() * float(10**6) # TPM is also len-norm
+            df['RPKM'] = df['READS'] / df['LEN_READ'] / total_reads * float(10**9)
             with open(output[0], 'a') as out:
                 df.to_csv(out, sep='\t', index=False, header=True)
         else:
