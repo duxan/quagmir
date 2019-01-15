@@ -1193,88 +1193,90 @@ rule gff_file:
     log:
         os.path.join("logs/", TIMESTAMP)
     run:
-        ref = pd.read_csv(input.reference_file, sep='\t')[['MIRNA',
-                                                     'SEQUENCE',
-                                                     'MOTIF.13',
-                                                     'CHROMOSOME',
-                                                     'X.COORDINATE',
-                                                     'Y.COORDINATE',
-                                                     'UNIQUE.MOTIF',
-                                                     'PRIMIRNA',
-                                                     'PRI.SEQUENCE']]
+        if config['produce_gff_file']:
+            ref = pd.read_csv(input.reference_file, sep='\t')[['MIRNA',
+                                                         'SEQUENCE',
+                                                         'MOTIF.13',
+                                                         'CHROMOSOME',
+                                                         'X.COORDINATE',
+                                                         'Y.COORDINATE',
+                                                         'UNIQUE.MOTIF',
+                                                         'PRIMIRNA',
+                                                         'PRI.SEQUENCE']]
 
-        ref.columns = ['MIRNA', 'REFERENCE', 'MOTIF.13', 'CHROMOSOME',
-                       'X.COORDINATE', 'Y.COORDINATE', 'UNIQUE.MOTIF',
-                       'PRIMIRNA', 'PRI.SEQUENCE']
+            ref.columns = ['MIRNA', 'REFERENCE', 'MOTIF.13', 'CHROMOSOME',
+                           'X.COORDINATE', 'Y.COORDINATE', 'UNIQUE.MOTIF',
+                           'PRIMIRNA', 'PRI.SEQUENCE']
 
-        ref = ref.dropna()
-        ref['MOTIF_START'] = ref.apply(lambda row: row['X.COORDINATE'] + row[
-            'PRI.SEQUENCE'].index(row['MOTIF.13']), axis=1)
-        ref['MIRNA_START'] = ref.apply(lambda row: row['X.COORDINATE'] + row[
-            'PRI.SEQUENCE'].index(row['REFERENCE']), axis=1)
-        ref['MIRNA_END'] = ref.apply(
-            lambda row: row['MIRNA_START'] + len(row['REFERENCE']), axis=1)
+            ref = ref.dropna()
+            ref['MOTIF_START'] = ref.apply(lambda row: row['X.COORDINATE'] + row[
+                'PRI.SEQUENCE'].index(row['MOTIF.13']), axis=1)
+            ref['MIRNA_START'] = ref.apply(lambda row: row['X.COORDINATE'] + row[
+                'PRI.SEQUENCE'].index(row['REFERENCE']), axis=1)
+            ref['MIRNA_END'] = ref.apply(
+                lambda row: row['MIRNA_START'] + len(row['REFERENCE']), axis=1)
 
-        res = pd.read_csv(input.sequence_info, sep='\t')[["MIRNA",
-                                                    "SEQUENCE",
-                                                    "LEN_READ",
-                                                    "READS",
-                                                    "DISTANCE"]]
+            res = pd.read_csv(input.sequence_info, sep='\t')[["MIRNA",
+                                                        "SEQUENCE",
+                                                        "LEN_READ",
+                                                        "READS",
+                                                        "DISTANCE"]]
 
-        gff = pd.merge(res, ref, left_on='MIRNA', right_on='MIRNA', how='left')
-        gff['START_G'] = gff.apply(lambda row: int(row['MOTIF_START'] - row[
-            'SEQUENCE'].index(row['MOTIF.13'])), axis=1)
-        gff['END_G'] = gff.apply(lambda row: row['START_G'] + len(
-            row['SEQUENCE']), axis=1)
-        gff['SOURCE'] = 'miRBase' + str(config['mirbase_version'])
-        gff['TYPE'] = gff.apply(lambda row: 'SO:0002166' if row[
-            'SEQUENCE'] == row['REFERENCE'] else 'SO:0002167', axis=1)
-        gff['STRAND'] = '+'
-        gff['PHASE'] = '.'
-        gff['CHR_NO'] = gff['CHROMOSOME'].apply(chr_sort)
+            gff = pd.merge(res, ref, left_on='MIRNA', right_on='MIRNA', how='left')
+            gff['START_G'] = gff.apply(lambda row: int(row['MOTIF_START'] - row[
+                'SEQUENCE'].index(row['MOTIF.13'])), axis=1)
+            gff['END_G'] = gff.apply(lambda row: row['START_G'] + len(
+                row['SEQUENCE']), axis=1)
+            gff['SOURCE'] = 'miRBase' + str(config['mirbase_version'])
+            gff['TYPE'] = gff.apply(lambda row: 'SO:0002166' if row[
+                'SEQUENCE'] == row['REFERENCE'] else 'SO:0002167', axis=1)
+            gff['STRAND'] = '+'
+            gff['PHASE'] = '.'
+            gff['CHR_NO'] = gff['CHROMOSOME'].apply(chr_sort)
 
-        gff['START_H'] = gff.apply(lambda row: int(row['START_G'] - row[
-            'X.COORDINATE']), axis=1)
-        gff['END_H'] = gff.apply(lambda row: int(row['END_G'] - row[
-            'X.COORDINATE']), axis=1)
-        gff = gff.sort_values(['CHR_NO', 'START_G'])
-        gff['POS'] = gff.apply(lambda row: row['CHROMOSOME'] + ':' +
-                                           str(row['START_G']) + '-' +
-                                           str(row['END_G']), axis=1)
-        gff['UID'] = gff['SEQUENCE'].apply(get_id)
-        no_paralogs = gff.groupby(['MIRNA', 'SEQUENCE']).apply(
-            lambda x: x.POS.nunique())
-        gff['NUMBER_OF_PARALOGS'] = gff.apply(lambda row: no_paralogs[
-            row['MIRNA'], row['SEQUENCE']], axis=1)
-        no_hits = gff.groupby(['SEQUENCE']).apply(lambda x: x.POS.nunique())
-        gff['HITS'] = gff.apply(lambda row: no_hits[row['SEQUENCE']], axis=1)
-        gff['VARIANT'] = gff.apply(variant, axis=1)
-        gff['ATTRIBUTES'] = gff.apply(lambda row: '; '.join([
-            'UID=' + row['UID'],
-            'Name=' + row['MIRNA'],
-            'Parent=' + row['PRIMIRNA'],
-            'Variant=' + row['VARIANT'],
-            'Hits=' + str(row['HITS']),
-            'Genomic=' + row['POS'],
-            'Expression=' + str(row['READS']),
-            'Filter=Pass',
-            'sequence=' + row['SEQUENCE'],
-            'number_of_paralogs=' + str(row['NUMBER_OF_PARALOGS'])
-        ]), axis=1)
+            gff['START_H'] = gff.apply(lambda row: int(row['START_G'] - row[
+                'X.COORDINATE']), axis=1)
+            gff['END_H'] = gff.apply(lambda row: int(row['END_G'] - row[
+                'X.COORDINATE']), axis=1)
+            gff = gff.sort_values(['CHR_NO', 'START_G'])
+            gff['POS'] = gff.apply(lambda row: row['CHROMOSOME'] + ':' +
+                                               str(row['START_G']) + '-' +
+                                               str(row['END_G']), axis=1)
+            gff['UID'] = gff['SEQUENCE'].apply(get_id)
+            no_paralogs = gff.groupby(['MIRNA', 'SEQUENCE']).apply(
+                lambda x: x.POS.nunique())
+            gff['NUMBER_OF_PARALOGS'] = gff.apply(lambda row: no_paralogs[
+                row['MIRNA'], row['SEQUENCE']], axis=1)
+            no_hits = gff.groupby(['SEQUENCE']).apply(lambda x: x.POS.nunique())
+            gff['HITS'] = gff.apply(lambda row: no_hits[row['SEQUENCE']], axis=1)
+            gff['VARIANT'] = gff.apply(variant, axis=1)
+            gff['ATTRIBUTES'] = gff.apply(lambda row: '; '.join([
+                'UID=' + row['UID'],
+                'Name=' + row['MIRNA'],
+                'Parent=' + row['PRIMIRNA'],
+                'Variant=' + row['VARIANT'],
+                'Hits=' + str(row['HITS']),
+                'Genomic=' + row['POS'],
+                'Expression=' + str(row['READS']),
+                'Filter=Pass',
+                'sequence=' + row['SEQUENCE'],
+                'number_of_paralogs=' + str(row['NUMBER_OF_PARALOGS'])
+            ]), axis=1)
 
-        gff = gff[['PRIMIRNA', 'SOURCE', 'TYPE', 'START_H', 'END_H',
-                   'DISTANCE', 'STRAND', 'PHASE', 'ATTRIBUTES']]
-        gff.columns = ['seqID',	'source', 'type', 'start', 'end', 'score',
-                       'strand', 'phase', 'attributes']
+            gff = gff[['PRIMIRNA', 'SOURCE', 'TYPE', 'START_H', 'END_H',
+                       'DISTANCE', 'STRAND', 'PHASE', 'ATTRIBUTES']]
+            gff.columns = ['seqID',	'source', 'type', 'start', 'end', 'score',
+                           'strand', 'phase', 'attributes']
 
-        header = '## VERSION: 1.0\n'
-        header += '## source-ontology: ' + config['source_ontology'].rstrip() + '\n'
-        header += '## COLDATA: ' + input.input_sample + '\n'
+            header = '## VERSION: 1.0\n'
+            header += '## source-ontology: ' + config['source_ontology'].rstrip() + '\n'
+            header += '## COLDATA: ' + input.input_sample + '\n'
 
-        with open(output[0], 'a') as w:
-            w.write(header)
-            gff.to_csv(w, index=False, sep='\t', header=False)
-
+            with open(output[0], 'a') as w:
+                w.write(header)
+                gff.to_csv(w, index=False, sep='\t', header=False)
+        else:
+            open(output[0], 'a').close()
 
 
 rule group_outputs:
