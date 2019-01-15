@@ -1182,6 +1182,9 @@ rule analyze_isomir:
                 nucleotide_dist_all.to_csv(
                     out, sep='\t', index=True, header=True)
 
+        if not config['produce_gff_file']:
+            open(config['reference_file'], 'a').close()
+
 
 rule gff_file:
     input:
