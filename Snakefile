@@ -1182,22 +1182,21 @@ rule analyze_isomir:
                 nucleotide_dist_all.to_csv(
                     out, sep='\t', index=True, header=True)
 
-        if not config['produce_gff_file']:
-            open(config['reference_file'], 'a').close()
-
 
 rule gff_file:
     input:
         input_sample=input_folder+'{A}',
         sequence_info='results/{A}.isomir.sequence_info.tsv',
-        reference_file=config['reference_file']
+        extend(
+            config['reference_file'], proxy=[] if config['produce_gff_file'] else [None]
+        )
     output:
         'results/{A}.gff'
     log:
         os.path.join("logs/", TIMESTAMP)
     run:
         if config['produce_gff_file']:
-            ref = pd.read_csv(input.reference_file, sep='\t')[['MIRNA',
+            ref = pd.read_csv(input[2], sep='\t')[['MIRNA',
                                                          'SEQUENCE',
                                                          'MOTIF.13',
                                                          'CHROMOSOME',
