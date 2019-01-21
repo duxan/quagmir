@@ -1186,17 +1186,17 @@ rule analyze_isomir:
 rule gff_file:
     input:
         input_sample=input_folder+'{A}',
-        sequence_info='results/{A}.isomir.sequence_info.tsv',
-        extend(
-            config['reference_file'], proxy=[] if config['produce_gff_file'] else [None]
-        )
+        sequence_info='results/{A}.isomir.sequence_info.tsv'#,
+        # extend(
+        #     config['reference_file'], proxy=[] if config['produce_gff_file'] else [None]
+        # )
     output:
         'results/{A}.gff'
     log:
         os.path.join("logs/", TIMESTAMP)
     run:
         if config['produce_gff_file']:
-            ref = pd.read_csv(input[2], sep='\t')[['MIRNA',
+            ref = pd.read_csv(config['reference_file'], sep='\t')[['MIRNA',
                                                          'SEQUENCE',
                                                          'MOTIF.13',
                                                          'CHROMOSOME',
