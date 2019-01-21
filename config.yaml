@@ -16,6 +16,9 @@ ambiguous_letters: True
 # DESTRUCTIVE MOTIF PULL
 destructive_motif_pull: False
 
+# PRODUCE GFF FILE
+produce_gff_file: True
+
 # INPUT
 data: 'data' # path to folder containing input files
 motif_consensus_file: 'motif-consensus.fa'
